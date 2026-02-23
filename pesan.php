@@ -1,10 +1,30 @@
 <?php
+require_once 'koneksi.php';
+
 $success_message = "";
+$error_message   = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Di sini logika untuk menyimpan pesan ke database bisa ditambahkan
-    // Untuk saat ini hanya simulasi sukses
-    $nama = htmlspecialchars($_POST['nama']);
-    $success_message = "Terima kasih $nama, pesan Anda telah kami terima.";
+    $nama     = trim($_POST['nama'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $subjek   = trim($_POST['subjek'] ?? '');
+    $pesan    = trim($_POST['pesan'] ?? '');
+
+    if (empty($nama) || empty($email) || empty($subjek) || empty($pesan)) {
+        $error_message = "Semua field harus diisi!";
+    } else {
+        $stmt = mysqli_prepare($KONEKSI,
+            "INSERT INTO pesan (username, email, judul, deskripsi) VALUES (?, ?, ?, ?)"
+        );
+        mysqli_stmt_bind_param($stmt, "ssss", $nama, $email, $subjek, $pesan);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $success_message = "Terima kasih <strong>$nama</strong>, pesan Anda telah kami terima. Kami akan segera menghubungi Anda.";
+        } else {
+            $error_message = "Gagal mengirim pesan. Silakan coba lagi.";
+        }
+        mysqli_stmt_close($stmt);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -139,45 +159,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="form-container">
             <?php if (!empty($success_message)): ?>
-                <div
-                    style="background-color: var(--light-green); color: var(--dark-green); padding: 1rem; border-radius: 10px; margin-bottom: 2rem; border: 1px solid var(--primary-green);">
-                    <?php echo $success_message; ?>
+                <div style="background-color: #d1fae5; color: #065f46; padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #6ee7b7; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <span><?php echo $success_message; ?></span>
                 </div>
-            <?php else: ?>
+            <?php endif; ?>
+
+            <?php if (!empty($error_message)): ?>
+                <div style="background-color: #fee2e2; color: #991b1b; padding: 1.2rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid #fca5a5; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">❌</span>
+                    <span><?php echo htmlspecialchars($error_message); ?></span>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($success_message)): ?>
                 <p style="text-align: center; color: var(--text-gray); margin-bottom: 2rem;">
                     Silakan isi formulir di bawah ini untuk mengirimkan kritik, saran, atau pertanyaan kepada kami.
                 </p>
             <?php endif; ?>
 
+            <?php if (empty($success_message)): ?>
             <form action="" method="POST">
                 <div class="form-group">
                     <label for="nama">Nama Lengkap</label>
                     <input type="text" id="nama" name="nama" class="form-control"
-                        placeholder="Masukkan nama lengkap Anda" required>
+                        placeholder="Masukkan nama lengkap Anda"
+                        value="<?php echo htmlspecialchars($_POST['nama'] ?? ''); ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Alamat Email</label>
                     <input type="email" id="email" name="email" class="form-control"
-                        placeholder="Masukkan alamat email Anda" required>
+                        placeholder="Masukkan alamat email Anda"
+                        value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="subjek">Subjek</label>
                     <input type="text" id="subjek" name="subjek" class="form-control" placeholder="Judul pesan"
-                        required>
+                        value="<?php echo htmlspecialchars($_POST['subjek'] ?? ''); ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="pesan">Pesan</label>
                     <textarea id="pesan" name="pesan" class="form-control" placeholder="Tuliskan pesan Anda di sini..."
-                        required></textarea>
+                        required><?php echo htmlspecialchars($_POST['pesan'] ?? ''); ?></textarea>
                 </div>
 
                 <button type="submit" class="btn-submit">
                     <span>✉️</span> Kirim Pesan
                 </button>
             </form>
+            <?php endif; ?>
         </div>
     </section>
 

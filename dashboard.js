@@ -101,6 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup auto-refresh for activity logs
     setInterval(refreshActivityLogs, 30000); // Every 30 seconds
+
+    // Buka tab dari URL parameter (misal: ?tab=messages)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam  = urlParams.get('tab');
+    if (tabParam) {
+        showTab(tabParam);
+    }
 });
 
 /**

@@ -8,6 +8,27 @@ if (!isset($_SESSION['username'])) {
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
+
+require_once 'koneksi.php';
+
+// Handle hapus pesan
+if (isset($_GET['hapus_pesan']) && is_numeric($_GET['hapus_pesan'])) {
+    $id_hapus = intval($_GET['hapus_pesan']);
+    $stmt = mysqli_prepare($KONEKSI, "DELETE FROM pesan WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $id_hapus);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    header("Location: dashboard-superadmin.php?tab=messages&notif=hapus_berhasil");
+    exit();
+}
+
+// Ambil semua pesan dari database
+$result_pesan = mysqli_query($KONEKSI, "SELECT * FROM pesan ORDER BY id DESC");
+$daftar_pesan = [];
+while ($row = mysqli_fetch_assoc($result_pesan)) {
+    $daftar_pesan[] = $row;
+}
+$total_pesan = count($daftar_pesan);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -416,8 +437,14 @@ header("Pragma: no-cache");
             <div id="messages" class="tab-content">
                 <div class="page-header">
                     <h1>Pesan Masuk</h1>
-                    <p>Melihat pesan yang terkirim dari halaman Kontak/Pesan</p>
+                    <p>Total <strong><?php echo $total_pesan; ?></strong> pesan dari pengunjung website</p>
                 </div>
+
+                <?php if (isset($_GET['notif']) && $_GET['notif'] === 'hapus_berhasil'): ?>
+                <div style="background:#d1fae5;color:#065f46;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1.5rem;border:1px solid #6ee7b7;display:flex;align-items:center;gap:.75rem;">
+                    <span style="font-size:1.4rem;">✅</span> Pesan berhasil dihapus.
+                </div>
+                <?php endif; ?>
 
                 <div class="section-card">
                     <h2>Daftar Pesan Pengunjung</h2>
@@ -425,54 +452,46 @@ header("Pragma: no-cache");
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>No</th>
                                     <th>Nama Pengirim</th>
                                     <th>Email</th>
-                                    <th>Subjek</th>
-                                    <th>Tanggal</th>
+                                    <th>Subjek / Judul</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php if (empty($daftar_pesan)): ?>
                                 <tr>
-                                    <td>1</td>
-                                    <td>Ibnul Qayyim</td>
-                                    <td>ibnul@example.com</td>
-                                    <td>Tanya Pendaftaran Siswa Baru</td>
-                                    <td>17 Feb 2026, 15:10</td>
-                                    <td>
-                                        <button class="btn-small btn-view"
-                                            onclick="alert('Isi Pesan: \n\nAssalamu\'alaikum, saya ingin bertanya tentang syarat pendaftaran untuk tahun ajaran baru. Terima kasih.')">Lihat
-                                            Pesan</button>
-                                        <button class="btn-small btn-delete">Hapus</button>
+                                    <td colspan="5" style="text-align:center;padding:2rem;color:#9ca3af;">
+                                        📭 Belum ada pesan masuk.
                                     </td>
                                 </tr>
+                                <?php else: ?>
+                                <?php $no = 1; foreach ($daftar_pesan as $pesan): ?>
                                 <tr>
-                                    <td>2</td>
-                                    <td>Siti Sarah</td>
-                                    <td>sarah@test.id</td>
-                                    <td>Saran Fasilitas Perpustakaan</td>
-                                    <td>16 Feb 2026, 09:45</td>
-                                    <td>
+                                    <td><?php echo $no++; ?></td>
+                                    <td><strong><?php echo htmlspecialchars($pesan['username']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($pesan['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($pesan['judul']); ?></td>
+                                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
                                         <button class="btn-small btn-view"
-                                            onclick="alert('Isi Pesan: \n\nMohon untuk menambah koleksi buku fiksi di perpustakaan agar lebih bervariasi. Sukses selalu!')">Lihat
-                                            Pesan</button>
-                                        <button class="btn-small btn-delete">Hapus</button>
+                                            onclick="lihatPesan(
+                                                '<?php echo addslashes(htmlspecialchars($pesan['username'])); ?>',
+                                                '<?php echo addslashes(htmlspecialchars($pesan['email'])); ?>',
+                                                '<?php echo addslashes(htmlspecialchars($pesan['judul'])); ?>',
+                                                '<?php echo addslashes(htmlspecialchars($pesan['deskripsi'])); ?>'
+                                            )">
+                                            👁️ Lihat Pesan
+                                        </button>
+                                        <a href="dashboard-superadmin.php?hapus_pesan=<?php echo $pesan['id']; ?>&tab=messages"
+                                            onclick="return confirm('Yakin ingin menghapus pesan dari <?php echo addslashes(htmlspecialchars($pesan['username'])); ?>?')"
+                                            class="btn-small btn-delete" style="text-decoration:none;display:inline-flex;align-items:center;">
+                                            🗑️ Hapus
+                                        </a>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Ahmad Faisal</td>
-                                    <td>faisal_a@ymail.com</td>
-                                    <td>Konfirmasi Pembayaran</td>
-                                    <td>15 Feb 2026, 20:12</td>
-                                    <td>
-                                        <button class="btn-small btn-view"
-                                            onclick="alert('Isi Pesan: \n\nSaya sudah melakukan transfer untuk biaya seragam. Mohon dicek ya pak/bu. Nama: Ahmad Faisal.')">Lihat
-                                            Pesan</button>
-                                        <button class="btn-small btn-delete">Hapus</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -798,6 +817,46 @@ header("Pragma: no-cache");
             </div>
         </div>
     </div>
+
+    <!-- Modal Lihat Pesan -->
+    <div id="modalLihatPesan" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);">
+        <div style="background:#fff;margin:6% auto;padding:2rem 2.5rem;border-radius:16px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;animation:fadeInModal .25s ease;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;border-bottom:2px solid #f3f4f6;padding-bottom:1rem;">
+                <h2 style="color:#1f2937;margin:0;font-size:1.3rem;">📩 Detail Pesan</h2>
+                <span onclick="tutupModalPesan()" style="font-size:2rem;font-weight:bold;cursor:pointer;color:#9ca3af;line-height:1;">&times;</span>
+            </div>
+            <div style="display:grid;gap:1rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div style="background:#f9fafb;padding:1rem;border-radius:10px;border:1px solid #e5e7eb;">
+                        <p style="font-size:0.75rem;color:#6b7280;margin:0 0 4px;">👤 Nama Pengirim</p>
+                        <p id="modalNama" style="font-weight:700;color:#1f2937;margin:0;font-size:1rem;"></p>
+                    </div>
+                    <div style="background:#f9fafb;padding:1rem;border-radius:10px;border:1px solid #e5e7eb;">
+                        <p style="font-size:0.75rem;color:#6b7280;margin:0 0 4px;">📧 Email</p>
+                        <p id="modalEmail" style="font-weight:600;color:#2563eb;margin:0;font-size:0.9rem;word-break:break-all;"></p>
+                    </div>
+                </div>
+                <div style="background:#f9fafb;padding:1rem;border-radius:10px;border:1px solid #e5e7eb;">
+                    <p style="font-size:0.75rem;color:#6b7280;margin:0 0 4px;">📌 Subjek / Judul</p>
+                    <p id="modalJudul" style="font-weight:700;color:#1f2937;margin:0;font-size:1rem;"></p>
+                </div>
+                <div style="background:#fffbeb;padding:1.25rem;border-radius:10px;border:1px solid #fcd34d;">
+                    <p style="font-size:0.75rem;color:#92400e;margin:0 0 8px;font-weight:600;">💬 Isi Pesan</p>
+                    <p id="modalDeskripsi" style="color:#1f2937;margin:0;line-height:1.7;white-space:pre-wrap;"></p>
+                </div>
+            </div>
+            <div style="margin-top:1.5rem;text-align:right;">
+                <button onclick="tutupModalPesan()" style="background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;padding:.7rem 1.8rem;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;">Tutup</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes fadeInModal {
+            from { opacity:0; transform:translateY(-20px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+    </style>
+
     <script src="dashboard.js"></script>
     <script>
         // General modal functions
@@ -848,8 +907,24 @@ header("Pragma: no-cache");
             document.getElementById('ekskulForm').style.display = 'none';
         }
 
+        // Fungsi modal lihat pesan
+        function lihatPesan(nama, email, judul, deskripsi) {
+            document.getElementById('modalNama').textContent     = nama;
+            document.getElementById('modalEmail').textContent    = email;
+            document.getElementById('modalJudul').textContent    = judul;
+            document.getElementById('modalDeskripsi').textContent = deskripsi;
+            document.getElementById('modalLihatPesan').style.display = 'block';
+        }
+
+        function tutupModalPesan() {
+            document.getElementById('modalLihatPesan').style.display = 'none';
+        }
+
         // Close any modal when clicking outside
         window.onclick = function (event) {
+            if (event.target.id === 'modalLihatPesan') {
+                tutupModalPesan();
+            }
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
                 if (event.target.id === 'beritaModal') hideNewsForm();
