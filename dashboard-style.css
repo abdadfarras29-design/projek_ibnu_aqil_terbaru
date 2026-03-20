@@ -661,3 +661,83 @@ input:checked + .slider:before {
         flex-direction: column;
     }
 }
+
+/* ===========================
+   CUSTOM ALERT & CONFIRM (SweetAlert Style)
+   =========================== */
+.sweet-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 11000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeInOverlay 0.3s ease;
+}
+
+.sweet-alert {
+    background: #fff;
+    border-radius: 28px;
+    padding: 2.5rem;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: scaleInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sweet-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center; justify-content: center;
+    font-size: 2.5rem;
+}
+
+.sweet-icon.success { background: #ecfdf5; color: #10b981; }
+.sweet-icon.warning { background: #fffbeb; color: #f59e0b; }
+.sweet-icon.error   { background: #fef2f2; color: #ef4444; }
+
+.sweet-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.025em;
+}
+
+.sweet-text {
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+}
+
+.sweet-buttons {
+    display: flex; gap: 0.75rem; justify-content: center;
+}
+
+.sweet-btn {
+    padding: 0.8rem 1.8rem;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+    flex: 1;
+    transition: all 0.2s;
+}
+
+.sweet-btn-confirm { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+.sweet-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); }
+
+.sweet-btn-cancel { background: #f1f5f9; color: #475569; }
+.sweet-btn-cancel:hover { background: #e2e8f0; }
+
+@keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleInScale { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }

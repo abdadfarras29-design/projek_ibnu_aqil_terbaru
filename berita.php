@@ -1,3 +1,40 @@
+<?php
+require_once 'koneksi.php';
+
+// Ambil berita pilihan utama (featured)
+$q_featured = mysqli_query($KONEKSI, "SELECT * FROM berita WHERE kategori = 'pilihan utama' ORDER BY tanggal DESC, id DESC LIMIT 1");
+$featured = mysqli_fetch_assoc($q_featured);
+
+// Ambil berita lainnya (bukan pilihan utama, atau jika tidak ada pilihan utama, semua berita)
+if ($featured) {
+    $q_news = mysqli_prepare($KONEKSI, "SELECT * FROM berita WHERE id != ? ORDER BY tanggal DESC, id DESC");
+    mysqli_stmt_bind_param($q_news, "i", $featured['id']);
+    mysqli_stmt_execute($q_news);
+    $result_news = mysqli_stmt_get_result($q_news);
+} else {
+    // Jika tidak ada pilihan utama, ambil semua berita
+    $result_news = mysqli_query($KONEKSI, "SELECT * FROM berita ORDER BY tanggal DESC, id DESC");
+}
+
+$news_list = [];
+while ($row = mysqli_fetch_assoc($result_news)) {
+    $news_list[] = $row;
+}
+
+function formatTanggal($tgl) {
+    if (!$tgl) return '';
+    $ts = strtotime($tgl);
+    $bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return date('d', $ts) . ' ' . $bulan[(int)date('m', $ts)] . ' ' . date('Y', $ts);
+}
+
+$badge_colors = [
+    'pengumuman'    => ['bg' => '#3b82f6', 'label' => 'PENGUMUMAN'],
+    'prestasi'      => ['bg' => '#f59e0b', 'label' => 'PRESTASI'],
+    'pilihan utama' => ['bg' => '#10b981', 'label' => 'PILIHAN UTAMA'],
+];
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -37,6 +74,16 @@
             background-color: #f3f4f6;
         }
 
+        .news-image-placeholder {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
         .news-content {
             padding: 1.5rem;
             flex-grow: 1;
@@ -70,6 +117,17 @@
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .news-badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.75rem;
+            width: fit-content;
         }
 
         .read-more {
@@ -111,6 +169,16 @@
             object-fit: cover;
         }
 
+        .featured-img-placeholder {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+        }
+
         .featured-content {
             padding: 3rem;
             display: flex;
@@ -127,6 +195,29 @@
             font-weight: 700;
             width: fit-content;
             margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            background: #f9fafb;
+            border-radius: 20px;
+            margin-top: 3rem;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: #6b7280;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #9ca3af;
         }
     </style>
 </head>
@@ -149,12 +240,13 @@
                         <li><a href="visi-misi.php">Visi & Misi</a></li>
                     </ul>
                 </li>
-                <li><a href="berita.php" class="active">Berita</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Kegiatan ▾</a>
                     <ul class="dropdown-content">
+                        <li><a href="berita.php" class="active">Berita</a></li>
                         <li><a href="fasilitas.php">Fasilitas</a></li>
                         <li><a href="ekskul.php">Ekstrakulikuler</a></li>
+                        <li><a href="galeri.php">Galeri</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -179,60 +271,73 @@
     <section class="section active" style="margin-top: 100px;">
         <h2 class="section-title">Berita Terkini</h2>
 
-        <!-- Featured News -->
-        <div class="featured-news">
-            <img src="unnamed.jpg" alt="Featured News" class="featured-img">
-            <div class="featured-content">
-                <div class="badge-special">PILIHAN UTAMA</div>
-                <div class="news-date">📅 22 Februari 2026</div>
-                <h2>SMP IBNU AQIL Meresmikan Laboratorium Komputer Generasi Terbaru</h2>
-                <p>Dalam upaya meningkatkan literasi digital siswa, SMP IBNU AQIL resmi membuka fasilitas laboratorium
-                    komputer tercanggih yang dilengkapi dengan 40 unit PC terbaru. Laboratorium ini diharapkan menjadi
-                    pusat inovasi dan kreativitas bagi seluruh peserta didik.</p>
-                <a href="#" class="read-more">Baca Selengkapnya →</a>
-            </div>
-        </div>
-
-        <div class="news-grid">
-            <!-- News Item 1 -->
-            <div class="news-card">
-                <img src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071&auto=format&fit=crop"
-                    alt="Berita 1" class="news-image">
-                <div class="news-content">
-                    <div class="news-date">📅 20 Februari 2026</div>
-                    <h3>Siswa SMP IBNU AQIL Juara 1 Olimpiade Matematika Nasional</h3>
-                    <p>Prestasi membanggakan kembali diraih oleh salah satu siswa didik kami, Ahmad Rizki, yang berhasil
-                        menyabet medali emas dalam ajang Olimpiade Matematika tingkat Nasional.</p>
-                    <a href="#" class="read-more">Baca Selengkapnya →</a>
-                </div>
+        <?php if (!$featured && empty($news_list)): ?>
+            <!-- Empty state -->
+            <div class="empty-state">
+                <div class="icon">📰</div>
+                <h3>Belum Ada Berita</h3>
+                <p>Belum ada berita yang dipublikasikan. Pantau terus halaman ini!</p>
             </div>
 
-            <!-- News Item 2 -->
-            <div class="news-card">
-                <img src="https://images.unsplash.com/photo-1523050335456-cbb6e0b20152?q=80&w=2070&auto=format&fit=crop"
-                    alt="Berita 2" class="news-image">
-                <div class="news-content">
-                    <div class="news-date">📅 15 Februari 2026</div>
-                    <h3>Kegiatan Field Trip: Mengenal Ekosistem Hutan Mangrove</h3>
-                    <p>Siswa kelas VIII melakukan kunjungan edukatif ke kawasan konservasi mangrove. Kegiatan ini
-                        bertujuan untuk menanamkan kepedulian terhadap lingkungan sejak dini.</p>
-                    <a href="#" class="read-more">Baca Selengkapnya →</a>
-                </div>
-            </div>
+        <?php else: ?>
 
-            <!-- News Item 3 -->
-            <div class="news-card">
-                <img src="https://images.unsplash.com/photo-1491333078588-55b6733c7de6?q=80&w=2070&auto=format&fit=crop"
-                    alt="Berita 3" class="news-image">
-                <div class="news-content">
-                    <div class="news-date">📅 10 Februari 2026</div>
-                    <h3>Peringatan Hari Guru: Apresiasi untuk Pahlawan Tanpa Tanda Jasa</h3>
-                    <p>Suasana haru dan ceria mewarnai perayaan hari guru di SMP IBNU AQIL. Para siswa memberikan
-                        kejutan manis sebagai bentuk tanda terima kasih kepada para guru.</p>
-                    <a href="#" class="read-more">Baca Selengkapnya →</a>
+            <?php if ($featured): ?>
+            <!-- Featured News -->
+            <div class="featured-news">
+                <?php if (!empty($featured['foto'])): ?>
+                    <img src="<?php echo htmlspecialchars($featured['foto']); ?>"
+                         alt="<?php echo htmlspecialchars($featured['judul']); ?>"
+                         class="featured-img"
+                         onerror="this.parentElement.innerHTML='<div class=\'featured-img-placeholder\'>📰</div>'">
+                <?php else: ?>
+                    <div class="featured-img-placeholder">📰</div>
+                <?php endif; ?>
+                <div class="featured-content">
+                    <div class="badge-special">PILIHAN UTAMA</div>
+                    <div class="news-date">📅 <?php echo formatTanggal($featured['tanggal']); ?></div>
+                    <h2><?php echo htmlspecialchars($featured['judul']); ?></h2>
+                    <p><?php echo htmlspecialchars($featured['deskripsi']); ?></p>
+                    <a href="detail-berita.php?id=<?php echo $featured['id']; ?>" class="read-more">Baca Selengkapnya →</a>
                 </div>
             </div>
-        </div>
+            <?php endif; ?>
+
+            <?php if (!empty($news_list)): ?>
+            <div class="news-grid">
+                <?php foreach ($news_list as $berita): ?>
+                <?php
+                    $kat   = $berita['kategori'];
+                    $bgKat = $badge_colors[$kat]['bg'] ?? '#6b7280';
+                    $lblKat = $badge_colors[$kat]['label'] ?? strtoupper($kat);
+                ?>
+                <div class="news-card">
+                    <?php if (!empty($berita['foto'])): ?>
+                        <img src="<?php echo htmlspecialchars($berita['foto']); ?>"
+                             alt="<?php echo htmlspecialchars($berita['judul']); ?>"
+                             class="news-image"
+                             onerror="this.parentElement.innerHTML='<div class=\'news-image-placeholder\'>📰</div>'">
+                    <?php else: ?>
+                        <div class="news-image-placeholder">📰</div>
+                    <?php endif; ?>
+                    <div class="news-content">
+                        <span class="news-badge" style="background: <?php echo $bgKat; ?>;"><?php echo $lblKat; ?></span>
+                        <div class="news-date">📅 <?php echo formatTanggal($berita['tanggal']); ?></div>
+                        <h3><?php echo htmlspecialchars($berita['judul']); ?></h3>
+                        <p><?php echo htmlspecialchars($berita['deskripsi']); ?></p>
+                        <a href="detail-berita.php?id=<?php echo $berita['id']; ?>" class="read-more">Baca Selengkapnya →</a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php elseif ($featured): ?>
+            <!-- Only featured news, no other news -->
+            <div style="text-align:center; padding:2rem; color:#9ca3af;">
+                <p>Hanya ada satu berita pilihan utama. Berita lainnya akan segera hadir!</p>
+            </div>
+            <?php endif; ?>
+
+        <?php endif; ?>
+
     </section>
 
     <!-- Footer -->

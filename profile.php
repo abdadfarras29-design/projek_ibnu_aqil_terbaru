@@ -28,12 +28,13 @@
                         <li><a href="visi-misi.php">Visi & Misi</a></li>
                     </ul>
                 </li>
-                <li><a href="berita.php">Berita</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Kegiatan ▾</a>
                     <ul class="dropdown-content">
+                        <li><a href="berita.php">Berita</a></li>
                         <li><a href="fasilitas.php">Fasilitas</a></li>
                         <li><a href="ekskul.php">Ekstrakulikuler</a></li>
+                        <li><a href="galeri.php">Galeri</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -90,7 +91,7 @@
                 <p style="line-height: 1.8; color: var(--text-gray); text-align: justify;">
                     Sekolah Ibnu Aqil Bogor adalah lembaga pendidikan yang mengintegrasikan pembelajaran akademik dengan
                     nilai-nilai keislaman. Kami berkomitmen membentuk peserta didik yang berakhlak mulia, berilmu, dan
-                    berkarakte
+                    berkarakter
                 </p>
                 <p style="line-height: 1.8; color: var(--text-gray); text-align: justify; margin-top: 1rem;">
                     Dengan dukungan tenaga pendidik profesional serta lingkungan belajar yang kondusif, Sekolah Ibnu

@@ -1,3 +1,12 @@
+<?php
+require_once 'koneksi.php';
+$res_statistik_query = mysqli_query($KONEKSI, "SELECT * FROM `jumlah siswa dll` ORDER BY id DESC LIMIT 1");
+$statistik_sekolah = $res_statistik_query ? mysqli_fetch_assoc($res_statistik_query) : null;
+$siswa_stat = $statistik_sekolah['siswa'] ?? '1250';
+$guru_stat = $statistik_sekolah['guru'] ?? '75';
+$prestasi_stat = $statistik_sekolah['prestasi'] ?? '150';
+$rombel_stat = $statistik_sekolah['rombongan belajar'] ?? '30';
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -26,12 +35,13 @@
                         <li><a href="visi-misi.php">Visi & Misi</a></li>
                     </ul>
                 </li>
-                <li><a href="berita.php">Berita</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Kegiatan ▾</a>
                     <ul class="dropdown-content">
+                        <li><a href="berita.php">Berita</a></li>
                         <li><a href="fasilitas.php">Fasilitas</a></li>
                         <li><a href="ekskul.php">Ekstrakulikuler</a></li>
+                        <li><a href="galeri.php">Galeri</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -81,7 +91,7 @@
             </div>
             <div class="stat-box">
                 <span class="stat-number" id="yearCount">0</span>
-                <span class="stat-label">Tahun Berdiri</span>
+                <span class="stat-label">Rombongan Belajar</span>
             </div>
         </div>
 
@@ -101,6 +111,19 @@
         <p style="margin-top: 0.5rem; font-size: 0.9rem;">Membentuk Generasi Cerdas & Berkarakter</p>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dynamicSchoolData = {
+                students: parseInt('<?php echo $siswa_stat; ?>') || 0,
+                teachers: parseInt('<?php echo $guru_stat; ?>') || 0,
+                achievements: parseInt('<?php echo $prestasi_stat; ?>') || 0,
+                yearEstablished: parseInt('<?php echo $rombel_stat; ?>') || 0
+            };
+            if (typeof schoolData !== 'undefined') {
+                Object.assign(schoolData, dynamicSchoolData);
+            }
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 

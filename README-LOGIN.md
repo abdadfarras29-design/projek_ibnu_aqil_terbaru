@@ -63,7 +63,7 @@ login-system/
 - ❌ Tidak bisa backup/restore database
 - ❌ Tidak bisa lihat activity logs lengkap
 
-## 🚀 Cara Menggunakan
+## Cara Menggunakan
 
 ### 1. Login
 1. Buka file `login.html`

@@ -27,11 +27,12 @@
                 <li class="dropdown">
                     <a href="#" class="dropbtn">Kegiatan ▾</a>
                     <ul class="dropdown-content">
+                        <li><a href="berita.php">Berita</a></li>
                         <li><a href="fasilitas.php">Fasilitas</a></li>
                         <li><a href="ekskul.php">Ekstrakulikuler</a></li>
+                        <li><a href="galeri.php">Galeri</a></li>
                     </ul>
                 </li>
-                <li><a href="berita.php">Berita</a></li>
                 <li class="dropdown">
                     <a href="#" class="dropbtn active">Hubungi ▾</a>
                     <ul class="dropdown-content">

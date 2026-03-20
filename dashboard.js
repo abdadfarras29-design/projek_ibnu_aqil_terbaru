@@ -32,52 +32,54 @@ function showTab(tabId) {
 
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Load berita data when berita tab is opened
+    if (tabId === 'berita' && typeof muatBerita === 'function') {
+        setTimeout(muatBerita, 50);
+    }
 }
 
 /**
  * Create backup
  */
-function createBackup() {
-    if (confirm('Apakah Anda yakin ingin membuat backup database?')) {
-        // Simulasi proses backup
-        alert('Backup sedang dibuat...\n\nProses ini mungkin memakan waktu beberapa menit.');
-        
-        // Dalam aplikasi nyata, ini akan memanggil API backend
-        setTimeout(() => {
-            alert('Backup berhasil dibuat!\n\nFile: backup-' + new Date().toISOString().split('T')[0] + '.sql');
-        }, 2000);
+async function createBackup() {
+    if (await sweetConfirm('Buat Backup?', 'Apakah Anda yakin ingin membuat backup database saat ini?')) {
+        await sweetAlert('Memproses...', 'Sistem sedang menyiapkan file backup. Mohon tunggu.', 'info');
+        setTimeout(async () => {
+            await sweetAlert('Berhasil!', 'Backup database berhasil dibuat!\n\nFile: backup-' + new Date().toISOString().split('T')[0] + '.sql');
+        }, 1500);
     }
 }
 
 /**
  * Open add user modal
  */
-function openAddUserModal() {
-    const username = prompt('Masukkan username baru:');
+async function openAddUserModal() {
+    const username = await sweetPrompt('Username Baru', 'Masukkan username untuk akun baru:');
     if (!username) return;
-    
-    const name = prompt('Masukkan nama lengkap:');
+
+    const name = await sweetPrompt('Nama Lengkap', 'Masukkan nama lengkap pemilik akun:');
     if (!name) return;
-    
-    const email = prompt('Masukkan email:');
+
+    const email = await sweetPrompt('Email', 'Masukkan alamat email aktif:');
     if (!email) return;
-    
-    const role = confirm('Apakah user ini Super Admin?\n\nOK = Super Admin\nCancel = Admin biasa');
-    
-    alert(`User baru berhasil ditambahkan!\n\nUsername: ${username}\nNama: ${name}\nEmail: ${email}\nRole: ${role ? 'Super Admin' : 'Admin'}\n\nPassword default: ${username}123`);
+
+    const role = await sweetConfirm('Jabatan Akun', 'Apakah user ini adalah Super Admin? (Klik "Batal" untuk Admin Biasa)');
+
+    await sweetAlert('User Ditambahkan', `User baru berhasil ditambahkan!\n\nUsername: ${username}\nRole: ${role ? 'Super Admin' : 'Admin'}\n\nPassword default: ${username}123`);
 }
 
 /**
  * Create announcement
  */
-function createAnnouncement() {
-    const title = prompt('Judul pengumuman:');
+async function createAnnouncement() {
+    const title = await sweetPrompt('Judul Pengumuman', 'Ketik judul pengumuman:');
     if (!title) return;
-    
-    const content = prompt('Isi pengumuman:');
+
+    const content = await sweetPrompt('Isi Pengumuman', 'Ketik isi pesan pengumuman:');
     if (!content) return;
-    
-    alert(`Pengumuman berhasil dibuat!\n\nJudul: ${title}\n\nPengumuman akan ditampilkan di website.`);
+
+    await sweetAlert('Dipublikasikan', `Pengumuman "${title}" berhasil dibuat dan akan ditampilkan di website.`);
 }
 
 /**
@@ -86,8 +88,8 @@ function createAnnouncement() {
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) {
-        sidebar.style.transform = sidebar.style.transform === 'translateX(0)' 
-            ? 'translateX(-100%)' 
+        sidebar.style.transform = sidebar.style.transform === 'translateX(0)'
+            ? 'translateX(-100%)'
             : 'translateX(0)';
     }
 }
@@ -98,9 +100,16 @@ function toggleSidebar() {
 document.addEventListener('DOMContentLoaded', () => {
     // Load user statistics (in real app, fetch from API)
     loadDashboardStats();
-    
+
     // Setup auto-refresh for activity logs
     setInterval(refreshActivityLogs, 30000); // Every 30 seconds
+
+    // Buka tab dari URL parameter (misal: ?tab=messages)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        showTab(tabParam);
+    }
 });
 
 /**
@@ -122,8 +131,8 @@ function refreshActivityLogs() {
 /**
  * Export data
  */
-function exportData(type) {
-    alert(`Mengekspor data ${type}...\n\nFile akan diunduh dalam format Excel.`);
+async function exportData(type) {
+    await sweetAlert('Mengekspor...', `Data ${type} sedang disiapkan. File Excel akan diunduh secara otomatis.`, 'info');
 }
 
 /**
@@ -165,9 +174,9 @@ function sortData(column, order) {
  * Format date
  */
 function formatDate(date) {
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
+    const options = {
+        year: 'numeric',
+        month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
@@ -206,9 +215,9 @@ function showNotification(message, type = 'info') {
         z-index: 10000;
         animation: slideInRight 0.3s ease;
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto remove after 3 seconds
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease';
@@ -236,7 +245,7 @@ document.addEventListener('keydown', (e) => {
         const searchInput = document.querySelector('input[type="text"][placeholder*="Cari"]');
         if (searchInput) searchInput.focus();
     }
-    
+
     // Ctrl/Cmd + S for save (if in edit mode)
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -246,3 +255,96 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// ===========================
+// CUSTOM PREMIUM ALERTS (SweetAlert Style)
+// ===========================
+function sweetAlert(title, text, type = 'success') {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'sweet-overlay';
+        overlay.innerHTML = `
+            <div class="sweet-alert">
+                <div class="sweet-icon ${type}">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</div>
+                <div class="sweet-title">${title}</div>
+                <div class="sweet-text">${text}</div>
+                <div class="sweet-buttons">
+                    <button class="sweet-btn sweet-btn-confirm">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const btn = overlay.querySelector('.sweet-btn-confirm');
+        btn.focus();
+        btn.onclick = () => {
+            overlay.remove();
+            resolve(true);
+        };
+    });
+}
+
+function sweetConfirm(title, text) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'sweet-overlay';
+        overlay.innerHTML = `
+            <div class="sweet-alert">
+                <div class="sweet-icon warning">❓</div>
+                <div class="sweet-title">${title}</div>
+                <div class="sweet-text">${text}</div>
+                <div class="sweet-buttons">
+                    <button class="sweet-btn sweet-btn-cancel">Batal</button>
+                    <button class="sweet-btn sweet-btn-confirm">Ya, Hapus!</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelector('.sweet-btn-cancel').onclick = () => {
+            overlay.remove();
+            resolve(false);
+        };
+        overlay.querySelector('.sweet-btn-confirm').onclick = () => {
+            overlay.remove();
+            resolve(true);
+        };
+    });
+}
+
+// Global helper for link confirmation
+async function confirmHapus(event, title, text) {
+    event.preventDefault();
+    const href = event.currentTarget.getAttribute('href');
+    const result = await sweetConfirm(title || 'Konfirmasi Hapus', text || 'Apakah Anda yakin ingin menghapus data ini?');
+    if (result) {
+        window.location.href = href;
+    }
+}
+
+function sweetPrompt(title, text, placeholder = '') {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'sweet-overlay';
+        overlay.innerHTML = `
+            <div class="sweet-alert">
+                <div class="sweet-icon info">🖊️</div>
+                <div class="sweet-title">${title}</div>
+                <div class="sweet-text">${text}</div>
+                <input type="text" id="sweetInput" class="form-control" placeholder="${placeholder}" style="margin-bottom:1.5rem; text-align:center;">
+                <div class="sweet-buttons">
+                    <button class="sweet-btn sweet-btn-cancel">Batal</button>
+                    <button class="sweet-btn sweet-btn-confirm">Lanjut</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const input = overlay.querySelector('#sweetInput');
+        input.focus();
+        overlay.querySelector('.sweet-btn-cancel').onclick = () => { overlay.remove(); resolve(null); };
+        overlay.querySelector('.sweet-btn-confirm').onclick = () => {
+            const val = input.value;
+            overlay.remove();
+            resolve(val);
+        };
+        input.onkeydown = (e) => { if(e.key === 'Enter') overlay.querySelector('.sweet-btn-confirm').click(); };
+    });
+}
